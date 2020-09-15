@@ -1,4 +1,7 @@
+import numpy as np
+
 # Function to read in text files for this project
+# returns either a string (for .txt files) or a 2D list (for .cnt or .mes files)
 # Filesname: name of file including extension
 # header_lines: number of lines that the header takes up (will be skipped)
 def readfile(filename, header_lines):
@@ -74,3 +77,16 @@ def readfile(filename, header_lines):
                 output.append(row)
 
     return output
+
+# Function to build the unknowns vector x
+# returns x as a numpy array
+# CNT: Data from the coordinates.cnt files
+def buildx(CNT):
+    # loop through CNT and find points of type U (unknowns)
+    x = np.array([])
+    for row in CNT:
+        type = row[1]
+        if type == 'U' or type == 'u':
+            x = np.append(x,[row[2],row[3]])
+
+    return x
