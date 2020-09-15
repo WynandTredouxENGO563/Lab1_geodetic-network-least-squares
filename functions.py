@@ -80,7 +80,7 @@ def readfile(filename, header_lines):
 
 # Function to build the unknowns vector x
 # returns x as a numpy array
-# CNT: Data from the coordinates.cnt files
+# CNT: 2D list containing data from the coordinates.cnt files
 def buildx(CNT):
     # loop through CNT and find points of type U (unknowns)
     x = np.array([])
@@ -90,3 +90,14 @@ def buildx(CNT):
             x = np.append(x,[row[2],row[3]])
 
     return x
+
+# Function to build the weight matrix P
+# returns P as a numpy matrix
+# MES: 2D list containing data from measurements.mes file
+def buildP(MES, sigma0):
+    n = len(MES)
+    P = np.zeros([n, n])
+    for i in range(0,n-1):
+        P[i][i] = sigma0/pow(MES[i][4],2)
+
+    return P
