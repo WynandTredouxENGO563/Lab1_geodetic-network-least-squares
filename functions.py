@@ -1,5 +1,6 @@
 import numpy as np
 
+
 # Function to read in text files for this project
 # returns either a string (for .txt files) or a 2D list (for .cnt or .mes files)
 # Filesname: name of file including extension
@@ -66,9 +67,9 @@ def readfile(filename, header_lines):
                 # try to convert elements in row to proper type
                 try:
                     # convert DMS to DD for angle measurements
-                    if elements[2]=="Angle":
+                    if elements[2] == "Angle":
                         DMS = elements[3].split(' ')
-                        elements[3] = float(DMS[0]) + float(DMS[1])/60 + float(DMS[2])/3600
+                        elements[3] = float(DMS[0]) + float(DMS[1]) / 60 + float(DMS[2]) / 3600
 
                     row = [elements[0], elements[1], elements[2], elements[3], float(elements[4])]
                 except:
@@ -77,6 +78,7 @@ def readfile(filename, header_lines):
                 output.append(row)
 
     return output
+
 
 # Function to build the unknowns vector x
 # returns x as a numpy array
@@ -87,9 +89,10 @@ def buildx(CNT):
     for row in CNT:
         type = row[1]
         if type == 'U' or type == 'u':
-            x = np.append(x,[row[2],row[3]])
+            x = np.append(x, [row[2], row[3]])
 
     return x
+
 
 # Function to build the weight matrix P
 # returns P as a numpy matrix
@@ -97,7 +100,27 @@ def buildx(CNT):
 def buildP(MES, sigma0):
     n = len(MES)
     P = np.zeros([n, n])
-    for i in range(0,n-1):
-        P[i][i] = sigma0/pow(MES[i][4],2)
+    for i in range(0, n):
+        P[i][i] = sigma0 / pow(MES[i][4], 2)
 
     return P
+
+
+# Function to build the design and misclosure matrices
+# returns A, w as a tuple of numpy matrices
+# CNT: 2D list containing data from the coordinates.cnt files
+# MES: 2D list containing data from measurements.mes file
+# x: numpy array containing initial values of unknowns
+# P: numpy weight matrix
+def buildAw(CNT, MES, x, P):
+    n = len(MES)  # n = number of measurements
+    u = len(x)  # u = number of unknowns
+    # initialize A and w to the proper size's
+    A = np.zeros([n, u])
+    w = np.zeros([n, 1])
+    # loop through all measurements
+    for i in range(0,n):
+        # get measurement
+        mesType = MES[i,]
+
+    return A, w
