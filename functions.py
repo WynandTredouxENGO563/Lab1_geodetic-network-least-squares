@@ -1,5 +1,6 @@
 from classes import *
 import numpy as np
+import math
 
 # Function to read in text files for this project
 # returns either a string (for .txt files) or a 2D list (for .cnt or .mes files)
@@ -71,7 +72,7 @@ def readfile(filename, header_lines):
                         DMS = elements[3].split(' ')
                         elements[3] = float(DMS[0]) + float(DMS[1]) / 60 + float(DMS[2]) / 3600
 
-                    row = [elements[0], elements[1], elements[2], elements[3], float(elements[4])]
+                    row = [elements[0], elements[1], elements[2], float(elements[3]), float(elements[4])]
                 except:
                     raise Exception(exception_text)
                 # save row in output
@@ -132,6 +133,7 @@ def buildAw(CNT, MES, x, P):
     # initialize A and w to the proper size's
     A = np.zeros([n, u])
     w = np.zeros([n, 1])
+
     # loop through all measurements (all rows of A and w)
     for i in range(0,n):
         # get measurement variables
@@ -150,13 +152,37 @@ def buildAw(CNT, MES, x, P):
             Pi = findPoint(CNT, Pat)
             Pk = findPoint(CNT, Pfrom)
 
-            # calculate partial derivatives
+            # calculate row of A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # partial derivatives:
             # if Pi is an unknown
-            #if Pi.isUnknown():
-                # find which columns of the A matrix it is in using the order of unknown in CNT
-               # col =
+            if Pi.isUnknown():
+                #find which columns of the A matrix it is in using the order of unknowns in CNT
+                col = 2*(Pi.unknownNum(CNT))
+                # calculate partial derivative for (x,y) of Pi
+                A[i][col] = (Pk.y - Pi.y)/(pow(Pk.x-Pi.x, 2) + pow(Pk.y-Pi.y, 2)) - (Pj.y - Pi.y)/(pow(Pj.x-Pi.x, 2) + pow(Pj.y-Pi.y, 2))  # f/dxi
+                A[i][col+1] = (Pk.x - Pi.x)/(pow(Pk.x-Pi.x, 2) + pow(Pk.y-Pi.y, 2)) - (Pj.x - Pi.x)/(pow(Pj.x-Pi.x, 2) + pow(Pj.y-Pi.y, 2))  # f/dyi
+            # if Pj is an unknown
+            if Pj.isUnknown():
+                col = 2*(Pj.unknownNum(CNT))
+                # calculate partial derivative for (x,y) of Pj
+                A[i][col] = (Pj.y - Pi.y)/(pow(Pj.x - Pi.x, 2) + pow(Pj.y - Pi.y, 2))  # f/dxj
+                A[i][col+1] = (Pj.x - Pi.x)/(pow(Pj.x - Pi.x, 2) + pow(Pj.y - Pi.y, 2))  # f/dyj
+            # if Pk is an unknown
+            if Pk.isUnknown():
+                col = 2 * (Pk.unknownNum(CNT))
+                # calculate partial derivative for (x,y) of Pk
+                A[i][col] = (Pk.y - Pi.y) / (pow(Pk.x - Pi.x, 2) + pow(Pk.y - Pi.y, 2))  # f/dxk
+                A[i][col + 1] = (Pk.x - Pi.x) / (pow(Pk.x - Pi.x, 2) + pow(Pk.y - Pi.y, 2))  # f/dyk
 
-            print('here')
+            # calculate row of w~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # w = estimated - measured
+            estimated = (math.atan2(Pk.y - Pi.y, Pk.x - Pi.x) - math.atan2(Pj.y - Pi.y, Pj.x - Pi.x))*180/math.pi # estimated angle in degrees
+            # make sure estimated angle is between 0 and 360 degrees
+            while estimated < 0:
+                estimated = estimated + 180
+            while estimated > 360:
+                estimated = estimated - 180
+            w[i] = estimated - MES[i][3]
 
         # if distance measurement
         elif mesType == 'Dist':
@@ -171,10 +197,27 @@ def buildAw(CNT, MES, x, P):
             Pi = findPoint(CNT, Pstart)
             Pj = findPoint(CNT, Pend)
 
-            print('here')
+            # calculate row of A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # partial derivatives:
+            # if Pi is an unknown
+            if Pi.isUnknown():
+                # find which columns of the A matrix it is in using the order of unknowns in CNT
+                col = 2 * (Pi.unknownNum(CNT))
+                # calculate partial derivative for (x,y) of Pi
+                A[i][col] = (Pi.x - Pj.x)/pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)  # f/dxi
+                A[i][col + 1] = (Pi.y - Pj.y) / pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)  # f/dxi
+            # if Pj is an unknown
+            if Pj.isUnknown():
+                # find which columns of the A matrix it is in using the order of unknowns in CNT
+                col = 2 * (Pj.unknownNum(CNT))
+                # calculate partial derivative for (x,y) of Pi
+                A[i][col] = (Pj.x - Pi.x) / pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)  # f/dxi
+                A[i][col + 1] = (Pj.y - Pi.y) / pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)  # f/dxi
+
+            # calculate row of w~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            estimated = pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)
+            w[i] = estimated - MES[i][3]
         else:
             exception_text = "Invalid measurement type for ID = " + mesID
             raise Exception(exception_text)
-        print('here')
-
     return A, w
