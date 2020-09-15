@@ -82,7 +82,7 @@ def readfile(filename, header_lines):
 
 # Function to build the unknowns vector x
 # returns x as a numpy array
-# CNT: 2D list containing data from the coordinates.cnt files
+# CNT: 2D list containing data from the coordinates.cnt file
 def buildx(CNT):
     # loop through CNT and find points of type U (unknowns)
     x = np.array([])
@@ -106,9 +106,26 @@ def buildP(MES, sigma0):
     return P
 
 
+# Function to find coordinates in CNT by Point name
+# Returns x, y as a tuple of floats
+# CNT: 2D list containing data from the coordinates.cnt file
+# name: name of point in Point column of CNT
+def findPoint(CNT, name):
+    x = None
+    y = None
+    for point in CNT: # for all points
+        if point[0] == name: # if point found
+            x = point[2]
+            y = point[3]
+    if not x: # if point could not be found
+        exception_text = "Could not find point '" + name + "' in CNT"
+        raise Exception(exception_text)
+    return x, y
+
+
 # Function to build the design and misclosure matrices
 # returns A, w as a tuple of numpy matrices
-# CNT: 2D list containing data from the coordinates.cnt files
+# CNT: 2D list containing data from the coordinates.cnt file
 # MES: 2D list containing data from measurements.mes file
 # x: numpy array containing initial values of unknowns
 # P: numpy weight matrix
@@ -120,7 +137,31 @@ def buildAw(CNT, MES, x, P):
     w = np.zeros([n, 1])
     # loop through all measurements
     for i in range(0,n):
-        # get measurement
-        mesType = MES[i,]
+        # get measurement variables
+        mesID, mesInfo, mesType, mesValue, mesStd = MES[i][0:5]
+        # if angle measurement
+        if mesType == 'Angle':
+            # parse mesInfo
+            try:
+                Pto, Pat, Pfrom = mesInfo.split('_')
+                print(Pto, Pat, Pfrom)
+            except:
+                exception_text = "Could not parse measurement info for ID = " + mesID
+                raise Exception(exception_text)
+            print('here')
+        # if distance measurement
+        elif mesType == 'Dist':
+            # parse mesInfo
+            try:
+                Pstart, Pend = mesInfo.split('_')
+                print(Pstart, Pend)
+            except:
+                exception_text = "Could not parse measurement info for ID = " + mesID
+                raise Exception(exception_text)
+            print('here')
+        else:
+            exception_text = "Invalid measurement type for ID = " + mesID
+            raise Exception(exception_text)
+        print('here')
 
     return A, w
