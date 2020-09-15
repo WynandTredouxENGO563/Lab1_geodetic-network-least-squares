@@ -1,5 +1,5 @@
+from classes import *
 import numpy as np
-
 
 # Function to read in text files for this project
 # returns either a string (for .txt files) or a 2D list (for .cnt or .mes files)
@@ -36,7 +36,7 @@ def readfile(filename, header_lines):
         lines = text.split('\n')
         # loop through each line, ignoring headers
         linenum = header_lines  # keep track of which line we're on
-        for line in lines[header_lines:-1]:
+        for line in lines[header_lines:]:
             linenum = linenum + 1
             # skip line if empty
             if not line:
@@ -111,17 +111,14 @@ def buildP(MES, sigma0):
 # CNT: 2D list containing data from the coordinates.cnt file
 # name: name of point in Point column of CNT
 def findPoint(CNT, name):
-    x = None
-    y = None
+    P = None
     for point in CNT: # for all points
         if point[0] == name: # if point found
-            x = point[2]
-            y = point[3]
-    if not x: # if point could not be found
+            P = Point(point[0], point[1], point[2], point[3])
+    if not P: # if point could not be found
         exception_text = "Could not find point '" + name + "' in CNT"
         raise Exception(exception_text)
-    return x, y
-
+    return P
 
 # Function to build the design and misclosure matrices
 # returns A, w as a tuple of numpy matrices
@@ -135,20 +132,32 @@ def buildAw(CNT, MES, x, P):
     # initialize A and w to the proper size's
     A = np.zeros([n, u])
     w = np.zeros([n, 1])
-    # loop through all measurements
+    # loop through all measurements (all rows of A and w)
     for i in range(0,n):
         # get measurement variables
         mesID, mesInfo, mesType, mesValue, mesStd = MES[i][0:5]
+
         # if angle measurement
         if mesType == 'Angle':
             # parse mesInfo
             try:
                 Pto, Pat, Pfrom = mesInfo.split('_')
-                print(Pto, Pat, Pfrom)
             except:
                 exception_text = "Could not parse measurement info for ID = " + mesID
                 raise Exception(exception_text)
+            # get point coordinates
+            Pj = findPoint(CNT, Pto)
+            Pi = findPoint(CNT, Pat)
+            Pk = findPoint(CNT, Pfrom)
+
+            # calculate partial derivatives
+            # if Pi is an unknown
+            #if Pi.isUnknown():
+                # find which columns of the A matrix it is in using the order of unknown in CNT
+               # col =
+
             print('here')
+
         # if distance measurement
         elif mesType == 'Dist':
             # parse mesInfo
@@ -158,6 +167,10 @@ def buildAw(CNT, MES, x, P):
             except:
                 exception_text = "Could not parse measurement info for ID = " + mesID
                 raise Exception(exception_text)
+            # get point coordinates
+            Pi = findPoint(CNT, Pstart)
+            Pj = findPoint(CNT, Pend)
+
             print('here')
         else:
             exception_text = "Invalid measurement type for ID = " + mesID
