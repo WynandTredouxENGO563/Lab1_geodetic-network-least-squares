@@ -127,7 +127,7 @@ def findPoint(CNT, name):
 # MES: 2D list containing data from measurements.mes file
 # x: numpy array containing initial values of unknowns
 # P: numpy weight matrix
-def buildAw(CNT, MES, x, P):
+def buildAw(CNT, MES, x):
     n = len(MES)  # n = number of measurements
     u = len(x)  # u = number of unknowns
     # initialize A and w to the proper size's
