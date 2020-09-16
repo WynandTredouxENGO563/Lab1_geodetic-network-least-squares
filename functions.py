@@ -152,6 +152,13 @@ def buildAw(CNT, MES, x, P):
             Pi = findPoint(CNT, Pat)
             Pk = findPoint(CNT, Pfrom)
 
+            # for each point which in an unknown, replace (x,y) coordinates with updated values from unknowns vector x
+            for P in [Pj, Pi, Pk]:
+                if P.isUnknown():
+                    x_index = 2*P.unknownNum(CNT)
+                    P.x = x[x_index]
+                    P.y = x[x_index + 1]
+
             # calculate row of A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # partial derivatives:
             # if Pi is an unknown
@@ -189,13 +196,19 @@ def buildAw(CNT, MES, x, P):
             # parse mesInfo
             try:
                 Pstart, Pend = mesInfo.split('_')
-                print(Pstart, Pend)
             except:
                 exception_text = "Could not parse measurement info for ID = " + mesID
                 raise Exception(exception_text)
             # get point coordinates
             Pi = findPoint(CNT, Pstart)
             Pj = findPoint(CNT, Pend)
+
+            # for each point which in an unknown, replace (x,y) coordinates with updated values from unknowns vector x
+            for P in [Pj, Pi]:
+                if P.isUnknown():
+                    x_index = 2*P.unknownNum(CNT)
+                    P.x = x[x_index]
+                    P.y = x[x_index + 1]
 
             # calculate row of A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # partial derivatives:
@@ -220,4 +233,5 @@ def buildAw(CNT, MES, x, P):
         else:
             exception_text = "Invalid measurement type for ID = " + mesID
             raise Exception(exception_text)
+    # convert
     return A, w
