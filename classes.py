@@ -1,17 +1,19 @@
 # Point class
 # stores all info about a point from a row of CNT
 class Point:
-    def __init__(self, name, type, x, y):
+    def __init__(self, name, mtype, x, y):
         self.name = name
-        self.type = type
+        self.type = mtype
         self.x = x
         self.y = y
+
     # Function to check if this point in an unknown
     def isUnknown(self):
         if self.type == 'U' or self.type == 'u':
             return True
         else:
             return False
+
     # Function to check which unknown this is
     def unknownNum(self, CNT):
         # if self is not an unknown
