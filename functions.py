@@ -2,6 +2,7 @@ from classes import *
 import numpy as np
 import math
 
+
 # Function to read in text files for this project
 # returns either a string (for .txt files) or a 2D list (for .cnt or .mes files)
 # Filesname: name of file including extension
@@ -163,7 +164,7 @@ def buildAw(CNT, MES, x):
             # partial derivatives:
             # if Pi is an unknown
             if Pi.isUnknown():
-                #find which columns of the A matrix it is in using the order of unknowns in CNT
+                # find which columns of the A matrix it should be in using the order of unknowns in CNT
                 col = 2*(Pi.unknownNum(CNT))
                 # calculate partial derivative for (x,y) of Pi
                 A[i][col] = (Pk.y - Pi.y)/(pow(Pk.x-Pi.x, 2) + pow(Pk.y-Pi.y, 2)) - (Pj.y - Pi.y)/(pow(Pj.x-Pi.x, 2) + pow(Pj.y-Pi.y, 2))  # f/dxi
@@ -183,7 +184,7 @@ def buildAw(CNT, MES, x):
 
             # calculate row of w~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # w = estimated - measured
-            estimated = (math.atan2(Pk.y - Pi.y, Pk.x - Pi.x) - math.atan2(Pj.y - Pi.y, Pj.x - Pi.x))*180/math.pi # estimated angle in degrees
+            estimated = (math.atan2(Pk.y - Pi.y, Pk.x - Pi.x) - math.atan2(Pj.y - Pi.y, Pj.x - Pi.x))*180/math.pi  # estimated angle in degrees
             # make sure estimated angle is between 0 and 360 degrees
             while estimated < 0:
                 estimated = estimated + 180
@@ -214,18 +215,17 @@ def buildAw(CNT, MES, x):
             # partial derivatives:
             # if Pi is an unknown
             if Pi.isUnknown():
-                # find which columns of the A matrix it is in using the order of unknowns in CNT
+                # find which columns of the A matrix it should be in using the order of unknowns in CNT
                 col = 2 * (Pi.unknownNum(CNT))
                 # calculate partial derivative for (x,y) of Pi
                 A[i][col] = (Pi.x - Pj.x)/pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)  # f/dxi
-                A[i][col + 1] = (Pi.y - Pj.y) / pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)  # f/dxi
+                A[i][col + 1] = (Pi.y - Pj.y) / pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)  # f/dyi
             # if Pj is an unknown
             if Pj.isUnknown():
-                # find which columns of the A matrix it is in using the order of unknowns in CNT
                 col = 2 * (Pj.unknownNum(CNT))
                 # calculate partial derivative for (x,y) of Pi
-                A[i][col] = (Pj.x - Pi.x) / pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)  # f/dxi
-                A[i][col + 1] = (Pj.y - Pi.y) / pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)  # f/dxi
+                A[i][col] = (Pj.x - Pi.x) / pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)  # f/dxj
+                A[i][col + 1] = (Pj.y - Pi.y) / pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)  # f/dyj
 
             # calculate row of w~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             estimated = pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)
@@ -233,5 +233,5 @@ def buildAw(CNT, MES, x):
         else:
             exception_text = "Invalid measurement type for ID = " + mesID
             raise Exception(exception_text)
-    # convert
+
     return A, w
