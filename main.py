@@ -2,10 +2,15 @@ from functions import *  # import everything from functions.py
 
 
 # main function
-def main(suppress_print = False):
+# CNTfile: Filename of coordinates file
+# MesFile: Filename of measurements file
+# CNTheader: number of header lines in coordinates file (default is 1)
+# MESheader: number of header lines in measurements file (default is 1)
+# suppress_print: Set to True to suppress outputs to the console
+def main(CNTfile, MesFile, CNTheader=1, Mesheader=1, suppress_print=False):
     # read in data from cnt and mes files
-    CNT = readfile("coordinates.cnt", 1)
-    MES = readfile("measurements.mes", 1)
+    CNT = readfile(CNTfile, CNTheader)
+    MES = readfile(MesFile, Mesheader)
 
     # build unknowns vector x
     # x consists of (X,Y) of each unknown point
@@ -17,10 +22,10 @@ def main(suppress_print = False):
 
     # Main loop start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # some settings for the loop. These could be put in a separate settings file
-    deltasum = 100
-    threshold = 0.0000000001
-    maxit = 100
-    count = 1
+    deltasum = 100  # initialize deltasum to some large value
+    threshold = 0.0000000001  # threshold for minimum deltasum
+    maxit = 100  # maximum iterations before breaking the loop
+    count = 1 # initialize iteration counter
     # loop until the sum of delta is less than some threshold
     while deltasum > threshold:
         if not suppress_print:
@@ -58,4 +63,4 @@ def main(suppress_print = False):
 
 # run main function
 if __name__ == '__main__':
-    main()
+    main("coordinates.cnt", "measurements.mes")
