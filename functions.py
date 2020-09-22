@@ -68,10 +68,10 @@ def readfile(filename, header_lines):
                     raise Exception(exception_text)
                 # try to convert elements in row to proper type
                 try:
-                    # convert DMS to DD for angle measurements
+                    # convert DMS to radians for angle measurements
                     if elements[2] == "Angle":
                         DMS = elements[3].split(' ')
-                        elements[3] = float(DMS[0]) + float(DMS[1]) / 60 + float(DMS[2]) / 3600
+                        elements[3] = (float(DMS[0]) + float(DMS[1]) / 60 + float(DMS[2]) / 3600) * math.pi/180
 
                     row = [elements[0], elements[1], elements[2], float(elements[3]), float(elements[4])]
                 except:
@@ -138,7 +138,7 @@ def buildAw(CNT, MES, x):
     # loop through all measurements (all rows of A and w)
     for i in range(0,n):
         # get measurement variables
-        mesID, mesInfo, mesType, mesValue, mesStd = MES[i][0:5]
+        mesID, mesInfo, mesType, mesValue = MES[i][0:4]
 
         # if angle measurement
         if mesType == 'Angle':
@@ -184,13 +184,13 @@ def buildAw(CNT, MES, x):
 
             # calculate row of w~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # w = estimated - measured
-            estimated = (math.atan2(Pk.y - Pi.y, Pk.x - Pi.x) - math.atan2(Pj.y - Pi.y, Pj.x - Pi.x))*180/math.pi  # estimated angle in degrees
+            estimated = (math.atan2(Pk.y - Pi.y, Pk.x - Pi.x) - math.atan2(Pj.y - Pi.y, Pj.x - Pi.x))  # estimated angle in radians
             # make sure estimated angle is between 0 and 360 degrees
             while estimated < 0:
-                estimated = estimated + 180
-            while estimated > 360:
-                estimated = estimated - 180
-            w[i] = estimated - MES[i][3]
+                estimated = estimated + math.pi
+            while estimated > 2*math.pi:
+                estimated = estimated - math.pi
+            w[i] = estimated - mesValue
 
         # if distance measurement
         elif mesType == 'Dist':
@@ -229,7 +229,7 @@ def buildAw(CNT, MES, x):
 
             # calculate row of w~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             estimated = pow(pow(Pi.x - Pj.x, 2) + pow(Pi.y - Pj.y, 2), 0.5)
-            w[i] = estimated - MES[i][3]
+            w[i] = estimated - mesValue
         else:
             exception_text = "Invalid measurement type for ID = " + mesID
             raise Exception(exception_text)
