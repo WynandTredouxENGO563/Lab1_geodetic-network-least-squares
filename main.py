@@ -83,6 +83,8 @@ def main(CNTfile, MesFile, CNTheader=1, Mesheader=1, suppress_print=False):
         subM[1][1] = Cxhat[i+1][i+1]
         subM[1][0] = Cxhat[i+1][i]
 
+
+
     if not suppress_print:
         print('posteriori variance factor: ' + str(sigma0hat)
               + '\nunit variance factor: ' + str(unitvar)

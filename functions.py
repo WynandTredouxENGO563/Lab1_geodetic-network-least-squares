@@ -11,7 +11,7 @@ def readfile(filename, header_lines):
     # acceptable file extensions
     ext = ['txt', 'mes', 'cnt']
     # get file extension
-    tmp = filename.split('.');
+    tmp = filename.split('.')
     # check if file extension is acceptable
     if not any(x in tmp[-1] for x in ext):
         # if file is of the wrong type, raise exception
@@ -174,12 +174,12 @@ def buildAw(CNT, MES, x):
                 col = 2*(Pj.unknownNum(CNT))
                 # calculate partial derivative for (x,y) of Pj
                 A[i][col] = (Pj.y - Pi.y)/(pow(Pj.x - Pi.x, 2) + pow(Pj.y - Pi.y, 2))  # f/dxj
-                A[i][col+1] = (Pj.x - Pi.x)/(pow(Pj.x - Pi.x, 2) + pow(Pj.y - Pi.y, 2))  # f/dyj
+                A[i][col+1] = -(Pj.x - Pi.x)/(pow(Pj.x - Pi.x, 2) + pow(Pj.y - Pi.y, 2))  # f/dyj
             # if Pk is an unknown
             if Pk.isUnknown():
                 col = 2 * (Pk.unknownNum(CNT))
                 # calculate partial derivative for (x,y) of Pk
-                A[i][col] = (Pk.y - Pi.y) / (pow(Pk.x - Pi.x, 2) + pow(Pk.y - Pi.y, 2))  # f/dxk
+                A[i][col] = -(Pk.y - Pi.y) / (pow(Pk.x - Pi.x, 2) + pow(Pk.y - Pi.y, 2))  # f/dxk
                 A[i][col + 1] = (Pk.x - Pi.x) / (pow(Pk.x - Pi.x, 2) + pow(Pk.y - Pi.y, 2))  # f/dyk
 
             # calculate row of w~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
