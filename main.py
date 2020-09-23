@@ -1,5 +1,6 @@
 from functions import *  # import everything from functions.py
 from datetime import datetime
+from matplotlib.lines import Line2D
 
 # main function
 # CNTfile: Filename of coordinates file
@@ -62,7 +63,7 @@ def main(CNTfile, MesFile, CNTheader=1, Mesheader=1, suppress_print=False):
     timetaken = time1 - time0
 
     # plot points using matplotlib
-    ax = plotCNT(CNT, x)
+    main_ax = plotCNT(CNT, x)
 
     # Open output file
     out = open("output.out", "w")
@@ -200,8 +201,14 @@ Name\tSemi-Major axis\tSemi-Minor axis\tSemi-major orientation\tSemi-minor orien
         out.write(outstr)
 
         # draw error ellipses on figure f1
-        drawEE(ax, unknown_points[int(i/2)].x, unknown_points[int(i/2)].y, lmax, lmin, major_orientation, scale=1000000)
-
+        drawEE(main_ax, unknown_points[int(i/2)].x, unknown_points[int(i/2)].y, lmax, lmin, major_orientation, scale=500000, name=unknown_points[int(i/2)].name)
+    # add legend to f1
+    plt.figure(main_ax.figure.number)  # make main_ax the active window
+    legend_elements = [Line2D([0], [0], marker='o', color='w', markerfacecolor='#fc4c4c', label='Unknown'),
+                       Line2D([0], [0], marker='o', color='w', markerfacecolor='#03c2fc', label='Known'),
+                       pat.Ellipse(xy=(0, 0), width=0, height=0,
+                                   angle=0, facecolor='none', edgecolor='red', label='Error Ellipse (exagerated)')]
+    plt.legend(handles=legend_elements)
 
     if not suppress_print:
         print('posteriori variance factor: ' + str(sigma0hat)
@@ -209,8 +216,11 @@ Name\tSemi-Major axis\tSemi-Minor axis\tSemi-major orientation\tSemi-minor orien
               )
         print('done!')
     out.close()
-    # show the figure
+    # save figures to pdf
+    SaveFigs("Figures.pdf")
+    # show the figure (this also pauses the program which is why it is last)
     plt.show()
+
 
 
 # run main function
