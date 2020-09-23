@@ -1,7 +1,9 @@
 from classes import *
 import numpy as np
 import math
-
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import matplotlib.patches as pat
 
 # Function to read in text files for this project
 # returns either a string (for .txt files) or a 2D list (for .cnt or .mes files)
@@ -72,6 +74,8 @@ def readfile(filename, header_lines):
                     if elements[2] == "Angle":
                         DMS = elements[3].split(' ')
                         elements[3] = (float(DMS[0]) + float(DMS[1]) / 60 + float(DMS[2]) / 3600) * math.pi/180
+                        # also convert standard deviation from arcseconds to rads
+                        elements[4] = float(elements[4])/3600 * math.pi/180
 
                     row = [elements[0], elements[1], elements[2], float(elements[3]), float(elements[4])]
                 except:
@@ -116,11 +120,22 @@ def findPoint(CNT, name):
     P = None
     for point in CNT: # for all points
         if point[0] == name: # if point found
-            P = Point(point[0], point[1], point[2], point[3])
+            P = Point(point)
     if not P: # if point could not be found
         exception_text = "Could not find point '" + name + "' in CNT"
         raise Exception(exception_text)
     return P
+
+
+# Function to make the angles from atan2 between 0 and 2pi
+# returns angle + npi in radians
+# angle: input angle in radians
+def npi(angle):
+    while angle < 0:
+        angle = angle + math.pi
+    while angle > 2 * math.pi:
+        estimated = angle - math.pi
+    return angle
 
 # Function to build the design and misclosure matrices
 # returns A, w as a tuple of numpy matrices
@@ -168,7 +183,7 @@ def buildAw(CNT, MES, x):
                 col = 2*(Pi.unknownNum(CNT))
                 # calculate partial derivative for (x,y) of Pi
                 A[i][col] = (Pk.y - Pi.y)/(pow(Pk.x-Pi.x, 2) + pow(Pk.y-Pi.y, 2)) - (Pj.y - Pi.y)/(pow(Pj.x-Pi.x, 2) + pow(Pj.y-Pi.y, 2))  # f/dxi
-                A[i][col+1] = (Pk.x - Pi.x)/(pow(Pk.x-Pi.x, 2) + pow(Pk.y-Pi.y, 2)) - (Pj.x - Pi.x)/(pow(Pj.x-Pi.x, 2) + pow(Pj.y-Pi.y, 2))  # f/dyi
+                A[i][col+1] = -(Pk.x - Pi.x)/(pow(Pk.x-Pi.x, 2) + pow(Pk.y-Pi.y, 2)) + (Pj.x - Pi.x)/(pow(Pj.x-Pi.x, 2) + pow(Pj.y-Pi.y, 2))  # f/dyi
             # if Pj is an unknown
             if Pj.isUnknown():
                 col = 2*(Pj.unknownNum(CNT))
@@ -185,11 +200,8 @@ def buildAw(CNT, MES, x):
             # calculate row of w~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # w = estimated - measured
             estimated = (math.atan2(Pk.y - Pi.y, Pk.x - Pi.x) - math.atan2(Pj.y - Pi.y, Pj.x - Pi.x))  # estimated angle in radians
-            # make sure estimated angle is between 0 and 360 degrees
-            while estimated < 0:
-                estimated = estimated + math.pi
-            while estimated > 2*math.pi:
-                estimated = estimated - math.pi
+            # make sure estimated angle is between 0 and 2pi
+            estimated = npi(estimated)
             w[i] = estimated - mesValue
 
         # if distance measurement
@@ -235,3 +247,86 @@ def buildAw(CNT, MES, x):
             raise Exception(exception_text)
 
     return A, w
+
+# Function to count the number of digits before the decimal place
+# returns counts as an int if only 1 number is given, or as a list for multiple numbers
+# nums: either a single int/float, or a list of ints/floats
+def numlen(nums):
+    try:  # if nums has no length (it's a float or int)
+        tmp = len(nums)
+    except:  # put it in an array
+        nums = [nums]
+
+    counts = []
+    for num in nums:
+        count = 0
+        num = abs(num)
+        while num >= 1:
+            count = count + 1
+            num = num/10.0
+        counts.append(count)
+    # if only 1 number was counted
+    if len(counts) == 1:
+        return counts[0]  # return as int
+    else:
+        return counts  # return as list
+
+
+# Function to plot all coordinates from CNT
+# returns fig and ax, the matplotlib figure and axis objects
+# CNT: coordinates 2D list
+# x: array with estimated unknown values
+# fignumber: figure number that should be used
+def plotCNT(CNT, x):
+    unknownCol = '#fc4c4c'
+    knownCol = '#03c2fc'
+    ax = plt.axes()
+    for i in range(0,len(CNT)):
+        P = Point(CNT[i])
+        c = knownCol  # set color to blue
+        # if P is unknown
+        if P.isUnknown():
+            # set color to red if P is an unknown point
+            c = unknownCol
+            # update P(x,y) from unknowns vector x
+            x_index = 2 * P.unknownNum(CNT)
+            P.x = x[x_index]
+            P.y = x[x_index + 1]
+        # plot point
+        plt.scatter(P.x, P.y, c=c)
+        # add text
+        plt.text(P.x+30, P.y+30, P.name)
+
+    # add legend
+    legend_elements = [Line2D([0], [0], marker='o', color='w', markerfacecolor='#fc4c4c', label='Unknown'),
+                       Line2D([0], [0], marker='o', color='w', markerfacecolor='#03c2fc', label='Known')]
+    plt.legend(handles=legend_elements)
+    # Show plot
+    #plt.show(block=False)  # block=False allows the rest of the program to run while the plot is open
+    return ax
+
+
+# Function to draw an error ellipse on a figure
+# returns nothing
+# fig: matplotlib.pyplot.figure object
+# x and y: (x,y) center of the ellipse
+# semi_major: size of the semi-major axis
+# semi_minor: size of the semi-minor axis
+# dir: orientation of the semi-major axis in radians
+# scale (optional): scale for the semi_major and semi_minor values to make the ellipse larger or smaller
+def drawEE(ax, x, y, semi_major, semi_minor, dir, scale=1):
+    # apply scale
+    semi_major = semi_major*scale
+    semi_minor = semi_minor*scale
+    # convert dir
+
+    #e = pat.Ellipse(xy=(x, y), width=semi_minor, height=semi_major, angle=0)
+    #ax.add_artist(e)
+    #plt.show(block=False)  # block=False allows the rest of the program to run while the plot is open
+
+    e = pat.Ellipse(xy=(x,y),width=semi_minor*0.5, height=semi_major,
+                    angle=-25, facecolor='none', edgecolor='red')
+    ax.add_artist(e)
+
+    return
+
