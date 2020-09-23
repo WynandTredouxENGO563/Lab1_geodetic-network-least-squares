@@ -1,11 +1,15 @@
 # Point class
 # stores all info about a point from a row of CNT
 class Point:
-    def __init__(self, name, mtype, x, y):
-        self.name = name
-        self.type = mtype
-        self.x = x
-        self.y = y
+    # constructor: pass list of [name, type, x, y]
+    def __init__(self, list):
+        try:
+            self.name = list[0]
+            self.type = list[1]
+            self.x = list[2]
+            self.y = list[3]
+        except:
+            raise Exception()
 
     # Function to check if this point in an unknown
     def isUnknown(self):
@@ -24,7 +28,7 @@ class Point:
         # loop through CNT and count unknowns until self is reached
         count = 0
         for point in CNT:  # for all points in CNT
-            P = Point(point[0], point[1], point[2], point[3])
+            P = Point(point)
             if P.name == self.name:  # if point is reached in CNT
                 return count # return the count of unknowns
             elif P.isUnknown(): # if point in CNT is an unknown
