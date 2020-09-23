@@ -2,8 +2,8 @@ from classes import *
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 import matplotlib.patches as pat
+from matplotlib.backends.backend_pdf import PdfPages
 
 # Function to read in text files for this project
 # returns either a string (for .txt files) or a 2D list (for .cnt or .mes files)
@@ -296,12 +296,8 @@ def plotCNT(CNT, x):
         plt.scatter(P.x, P.y, c=c)
         # add text
         plt.text(P.x+30, P.y+30, P.name)
-
-    # add legend
-    legend_elements = [Line2D([0], [0], marker='o', color='w', markerfacecolor='#fc4c4c', label='Unknown'),
-                       Line2D([0], [0], marker='o', color='w', markerfacecolor='#03c2fc', label='Known')]
-    plt.legend(handles=legend_elements)
-    # Show plot
+    # set title
+    ax.set_title('Adjusted Geodetic Network with Exaggerated Error Ellipses')
     #plt.show(block=False)  # block=False allows the rest of the program to run while the plot is open
     return ax
 
@@ -314,19 +310,42 @@ def plotCNT(CNT, x):
 # semi_minor: size of the semi-minor axis
 # dir: orientation of the semi-major axis in radians
 # scale (optional): scale for the semi_major and semi_minor values to make the ellipse larger or smaller
-def drawEE(ax, x, y, semi_major, semi_minor, dir, scale=1):
-    # apply scale
-    semi_major = semi_major*scale
-    semi_minor = semi_minor*scale
-    # convert dir
-
-    #e = pat.Ellipse(xy=(x, y), width=semi_minor, height=semi_major, angle=0)
-    #ax.add_artist(e)
-    #plt.show(block=False)  # block=False allows the rest of the program to run while the plot is open
-
-    e = pat.Ellipse(xy=(x,y),width=semi_minor*0.5, height=semi_major,
-                    angle=-25, facecolor='none', edgecolor='red')
+# name (optional): set name for unknown point (used for zoomed in plot)
+def drawEE(ax, x, y, semi_major, semi_minor, dir, scale=1, name=''):
+    # convert dir to degrees
+    dir = dir*180/math.pi
+    # create exaggerated ellipse on main plot:
+        # ellipse is centered on the given (x,y)
+        # width is the semi-minor axis
+        # height in semi-major
+        # angle takes degrees and rotates the ellipse counter-clockwise
+        # we need to rotated the ellipse by dir degrees clockwise, so pass -dir
+    e = pat.Ellipse(xy=(x, y), width=semi_minor*scale, height=semi_major*scale,
+                    angle=-dir, facecolor='none', edgecolor='red', label='Error Ellipse (exagerated)')
     ax.add_artist(e)
+
+    # create zoomed in plot of unknown point with error ellipse to scale
+    fig = plt.figure()
+    ax2 = plt.axes()
+    plt.scatter(x, y)
+    fig.suptitle("To-scale Error Ellipse for " + name)
+    e = pat.Ellipse(xy=(x, y), width=semi_minor, height=semi_major,
+                    angle=-dir, facecolor='none', edgecolor='red')
+    ax2.add_artist(e)
+    # adjust limits to 2x the semi-major axis
+    plt.xlim(x-semi_major, x+semi_major)
+    plt.ylim(y-semi_major, y+semi_major)
 
     return
 
+# Function to save all open figures as PDF
+# I got this function from stack overflow user farenorth: https://stackoverflow.com/questions/26368876/saving-all-open-matplotlib-figures-in-one-file-at-once
+# filename: filename of the pdf to be saved
+# figs (optional): by default the function will grab all open figures. This option lets the user specify figures instead
+def SaveFigs(filename, figs=None):
+    pp = PdfPages(filename)
+    if figs is None:
+        figs = [plt.figure(n) for n in plt.get_fignums()]
+    for fig in figs:
+        fig.savefig(pp, format='pdf')
+    pp.close()
