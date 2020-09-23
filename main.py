@@ -7,8 +7,9 @@ from matplotlib.lines import Line2D
 # MesFile: Filename of measurements file
 # CNTheader: number of header lines in coordinates file (default is 1)
 # MESheader: number of header lines in measurements file (default is 1)
-# suppress_print: Set to True to suppress outputs to the console
-def main(CNTfile, MesFile, CNTheader=1, Mesheader=1, suppress_print=False):
+# suppress_print (optional): Set to True to suppress outputs to the console
+# plot(optional): Set to False to suppress plotting
+def main(CNTfile, MesFile, CNTheader=1, Mesheader=1, suppress_print=False, plot=True):
     time0 = datetime.now()
     # read in data from cnt and mes files
     CNT = readfile(CNTfile, CNTheader)
@@ -219,7 +220,10 @@ Name\tSemi-Major axis\tSemi-Minor axis\tSemi-major orientation\tSemi-minor orien
     # save figures to pdf
     SaveFigs("Figures.pdf")
     # show the figure (this also pauses the program which is why it is last)
-    plt.show()
+    if plot:
+        plt.show()
+    # close all
+    plt.close('all')
 
 
 
