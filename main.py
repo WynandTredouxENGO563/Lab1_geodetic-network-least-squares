@@ -143,10 +143,10 @@ Point Name\tx\ty\tdiffx\tdiffy"""
 
     # write rhat to file
     out.write(divider + "\nVector of Residuals\n")
-    np.savetxt(out, rhat, fmt='%+1.4E')
+    np.savetxt(out, rhat, fmt='%+1.6E')
     # Write lhat to file
     out.write(divider[1:] + "\nVector of Corrected Measurements\n")
-    np.savetxt(out, lhat, fmt='%12.4f')
+    np.savetxt(out, lhat, fmt='%12.6f')
     # Write Cxhat to file
     out.write(divider[1:] + "\nVariance Covariance Matrix of Unknowns\n")
     np.savetxt(out, Cxhat, fmt='%+1.4E', delimiter='\t')
@@ -169,9 +169,6 @@ Name\tSemi-Major axis\tSemi-Minor axis\tSemi-major orientation\tSemi-minor orien
         subM[0][1] = Cxhat[i][i+1]
         subM[1][1] = Cxhat[i+1][i+1]
         subM[1][0] = Cxhat[i+1][i]
-        # DEBUG
-        # subM = [[2, 1],
-        #         [1, 4]]
         # calc eigen values
         evals = np.linalg.eigvals(subM)
         lmax = evals.max()
@@ -197,7 +194,6 @@ Name\tSemi-Major axis\tSemi-Minor axis\tSemi-major orientation\tSemi-minor orien
         tmp = '{:' + str(max_num_len + decimals + 4) + '.' + str(decimals) + 'f}'
         # spacing for E should be decimals + 1 for E + 1 for sign + 2 for exponent + 2 for number and decimal + 4 for buffer
         tmp2 = '{:' + str(decimals + 10) + '.' + str(decimals) + 'E}'
-        #tmp2 = '{:10.4E}'
         outstr = outstr + tmp2*2 + tmp*2
         outstr = outstr.format(unknown_points[int(i/2)].name, lmax, lmin, major_orientation, minor_orientation)
         out.write(outstr)
