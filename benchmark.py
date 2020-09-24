@@ -9,4 +9,7 @@ def benchmark(n=10000):
 
 
 if __name__ == '__main__':
-    benchmark(int(sys.argv[1]))
+    if len(sys.argv) < 2:
+        benchmark()
+    else:
+        benchmark(int(sys.argv[1]))
