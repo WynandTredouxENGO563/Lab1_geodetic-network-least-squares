@@ -4,6 +4,8 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.patches as pat
 from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.lines import Line2D
+import os
 
 # Function to read in text files for this project
 # returns either a string (for .txt files) or a 2D list (for .cnt or .mes files)
@@ -281,7 +283,10 @@ def plotCNT(CNT, x):
     unknownCol = '#fc4c4c'
     knownCol = '#03c2fc'
     ax = plt.axes()
-    for i in range(0,len(CNT)):
+    ax.axis('square')
+    # save min/max x and y for plot limits
+    # initialize to first point's (x,y)
+    for i in range(0, len(CNT)):
         P = Point(CNT[i])
         c = knownCol  # set color to blue
         # if P is unknown
@@ -298,6 +303,17 @@ def plotCNT(CNT, x):
         plt.text(P.x+30, P.y+30, P.name)
     # set title
     ax.set_title('Adjusted Geodetic Network with Exaggerated Error Ellipses')
+    # get min/max x
+    minx = min([i[2] for i in CNT])
+    maxx = max([i[2] for i in CNT])
+    # get min/max y
+    miny = min([i[3] for i in CNT])
+    maxy = max([i[3] for i in CNT])
+    # set limits with 10% buffer
+    bufx = abs(maxx - minx)*0.1
+    bufy = abs(maxy - miny)*0.1
+    plt.xlim(minx - bufx, maxx + bufx)
+    plt.ylim(miny - bufy, maxy + bufy)
     #plt.show(block=False)  # block=False allows the rest of the program to run while the plot is open
     return ax
 
@@ -308,35 +324,43 @@ def plotCNT(CNT, x):
 # x and y: (x,y) center of the ellipse
 # semi_major: size of the semi-major axis
 # semi_minor: size of the semi-minor axis
-# dir: orientation of the semi-major axis in radians
+# azimuth: orientation of the semi-major axis in radians
 # scale (optional): scale for the semi_major and semi_minor values to make the ellipse larger or smaller
 # name (optional): set name for unknown point (used for zoomed in plot)
-def drawEE(ax, x, y, semi_major, semi_minor, dir, scale=1, name=''):
-    # convert dir to degrees
-    dir = dir*180/math.pi
+def drawEE(ax, x, y, semi_major, semi_minor, azimuth, scale=1, name=''):
+    # convert azimuth to degrees
+    azimuthd = azimuth*180/math.pi
     # create exaggerated ellipse on main plot:
         # ellipse is centered on the given (x,y)
-        # width is the semi-minor axis
-        # height in semi-major
+        # width is the 2*semi-minor axis
+        # height in 2*semi-major
         # angle takes degrees and rotates the ellipse counter-clockwise
-        # we need to rotated the ellipse by dir degrees clockwise, so pass -dir
-    e = pat.Ellipse(xy=(x, y), width=semi_minor*scale, height=semi_major*scale,
-                    angle=-dir, facecolor='none', edgecolor='red', label='Error Ellipse (exagerated)')
+        # azimuth is the clockwise angle from the y axis, so we pass -azimuth in degrees
+    e = pat.Ellipse(xy=(x, y), width=2*semi_minor*scale, height=2*semi_major*scale,
+                    angle=-azimuthd, facecolor='none', edgecolor='red', label='Error Ellipse (exaggerated)')
     ax.add_artist(e)
+    # create semi-major axis line
+    l = Line2D([x, x + scale*semi_major*math.sin(azimuth)], [y, y + scale*semi_major*math.cos(azimuth)], color='red')
+    ax.add_artist(l)
 
     # create zoomed in plot of unknown point with error ellipse to scale
     fig = plt.figure()
     ax2 = plt.axes()
+    ax2.axis('square')
     plt.scatter(x, y)
-    fig.suptitle("To-scale Error Ellipse for " + name)
-    e = pat.Ellipse(xy=(x, y), width=semi_minor, height=semi_major,
-                    angle=-dir, facecolor='none', edgecolor='red')
+    fig.suptitle("To-scale Error Ellipse for " + name + " (square plot)")
+    e = pat.Ellipse(xy=(x, y), width=2*semi_minor, height=2*semi_major,
+                    angle=-azimuthd, facecolor='none', edgecolor='red')
     ax2.add_artist(e)
-    # adjust limits to 2x the semi-major axis
-    plt.xlim(x-semi_major, x+semi_major)
-    plt.ylim(y-semi_major, y+semi_major)
+    # create semi-major axis line
+    l = Line2D([x, x + semi_major * math.sin(azimuth)], [y, y + semi_major * math.cos(azimuth)], color='red')
+    ax2.add_artist(l)
+    # adjust limits to 2.2x the semi-major axis
+    plt.xlim(x-semi_major*1.1, x+semi_major*1.1)
+    plt.ylim(y-semi_major*1.1, y+semi_major*1.1)
 
     return
+
 
 # Function to save all open figures as PDF
 # I got this function from stack overflow user farenorth: https://stackoverflow.com/questions/26368876/saving-all-open-matplotlib-figures-in-one-file-at-once
@@ -349,3 +373,23 @@ def SaveFigs(filename, figs=None):
     for fig in figs:
         fig.savefig(pp, format='pdf')
     pp.close()
+
+
+# Function to find a single file of a certain filetype
+# If more than 1 file is found, error is given
+# returns a single filename
+# ext: extension to look for (without '.')
+def FindFiles(ext):
+    files = os.listdir()
+    found = []
+    for file in files:
+        if ext == file.split('.')[-1]:
+            found.append(file)
+    if len(found) > 1:
+        raise Exception("More than 1 ." + ext + " file in directory. Either remove all but 1 ." + ext + """ file, or specify which file to use:
+main(CNTFile='filename.cnt', MESFile='filename.mes')""")
+    if len(found) == 0:
+        raise Exception("No ." + ext + " file in directory. Ensure that ." + ext + """ file is in the root directory, or specify a path:
+main(CNTFile='my/path/filename.cnt', MESFile='my/path/filename.mes')""")
+
+    return found[0]  # return 1st string in found
