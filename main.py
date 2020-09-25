@@ -1,19 +1,29 @@
 from functions import *  # import everything from functions.py
 from datetime import datetime
-from matplotlib.lines import Line2D
+
 
 # main function
-# CNTfile: Filename of coordinates file
-# MesFile: Filename of measurements file
+# CNTFile: Filename of coordinates file
+# MESFile: Filename of measurements file
 # CNTheader: number of header lines in coordinates file (default is 1)
 # MESheader: number of header lines in measurements file (default is 1)
 # suppress_print (optional): Set to True to suppress outputs to the console
 # plot(optional): Set to False to suppress plotting
-def main(CNTfile, MesFile, CNTheader=1, Mesheader=1, suppress_print=False, plot=True):
+def main(CNTFile = '', MESFile = '', CNTheader=1, Mesheader=1, suppress_print=False, plot=True):
+    # start timer
     time0 = datetime.now()
+    # if no CNT filename was provided
+    if CNTFile == '':
+        # automatically find CNT file in directory
+        CNTFile = FindFiles('cnt')
+    # if no MES filename was provided
+    if MESFile == '':
+        # automatically find CNT file in directory
+        MESFile = FindFiles('mes')
+
     # read in data from cnt and mes files
-    CNT = readfile(CNTfile, CNTheader)
-    MES = readfile(MesFile, Mesheader)
+    CNT = readfile(CNTFile, CNTheader)
+    MES = readfile(MESFile, Mesheader)
 
     # build unknowns vector x
     # x consists of (X,Y) of each unknown point
@@ -137,7 +147,7 @@ Point Name\tx\ty\tdiffx\tdiffy"""
             # spacing should be max_num_len + decimals + 2 for decimal point and signs + 2 for buffer
             tmp = '{:' + str(max_num_len + decimals + 4) + '.' + str(decimals) + 'f}'
             outstr = outstr + tmp*4
-            outstr = outstr.format(P.name, P.x, P.y, diffx, diffy)
+            outstr = outstr.format(P.name, xest, yest, diffx, diffy)
             out.write(outstr)
             count = count + 1
 
@@ -159,7 +169,7 @@ Point Name\tx\ty\tdiffx\tdiffy"""
 
     # Calculate error ellipse
     out.write(divider[1:] + """\nError Ellipse\n
-Name\tSemi-Major axis\tSemi-Minor axis\tSemi-major orientation\tSemi-minor orientation"""
+Name\tSemi-Major axis\tSemi-Minor axis\tSemi-major azimuth"""
               )
     # for each 2x2 sub-matrix in Cxhat
     for i in range(0, len(Cxhat), 2):
@@ -176,31 +186,24 @@ Name\tSemi-Major axis\tSemi-Minor axis\tSemi-major orientation\tSemi-minor orien
         # calc semi-minor/major axis'
         semi_minor = math.sqrt(lmin)
         semi_major = math.sqrt(lmax)
-        # calc orientations
-        minor_orientation = npi(math.atan2(lmin - subM[0][0], subM[0][1]))
-        major_orientation = npi(math.atan2(lmax - subM[0][0], subM[0][1]))
-
-        # Check and minor_orientation and major_orientation are 90 degrees (pi/2) apart
-        if np.round(np.abs(minor_orientation - major_orientation)*180/math.pi, 0) != 90.0:
-            print("warning: minor_orientation and major_orientation aren't 90 degrees apart\n"
-                  "using major orientation only")
-            minor_orientation = major_orientation + math.pi/2
+        # calc orientation of semi-major axis
+        azimuth = 0.5 * math.atan2(2*subM[0][1], subM[1][1] - subM[0][0])  # azimuth is the angle clockwise from the y axis to the semi-major axis
 
         # write to file
         outstr = '\n{:' + str(max_name_len) + '}'
-        max_num_len = max(numlen([major_orientation*180/math.pi, minor_orientation*180/math.pi, lmax, lmin]))  # find maximum length of numbers not including decimals
+        max_num_len = max(numlen([azimuth, lmax, lmin]))  # find maximum length of numbers not including decimals
         decimals = 8  # number of decimal places to keep
         # spacing should be max_num_len + decimals + 2 for decimal point and signs + 2 for buffer
         tmp = '{:' + str(max_num_len + decimals + 4) + '.' + str(decimals) + 'f}'
         # spacing for E should be decimals + 1 for E + 1 for sign + 2 for exponent + 2 for number and decimal + 4 for buffer
         tmp2 = '{:' + str(decimals + 10) + '.' + str(decimals) + 'E}'
-        outstr = outstr + tmp2*2 + tmp*2
-        outstr = outstr.format(unknown_points[int(i/2)].name, lmax, lmin, major_orientation, minor_orientation)
+        outstr = outstr + tmp2*2 + tmp*1
+        outstr = outstr.format(unknown_points[int(i/2)].name, semi_major, semi_minor, azimuth)
         out.write(outstr)
 
         # draw error ellipses on figure f1
         if plot:
-            drawEE(main_ax, unknown_points[int(i/2)].x, unknown_points[int(i/2)].y, lmax, lmin, major_orientation, scale=500000, name=unknown_points[int(i/2)].name)
+            drawEE(main_ax, unknown_points[int(i/2)].x, unknown_points[int(i/2)].y, semi_major, semi_minor, azimuth, scale=10000, name=unknown_points[int(i/2)].name)
     # add legend to f1
     if plot:
         plt.figure(main_ax.figure.number)  # make main_ax the active window
@@ -208,7 +211,7 @@ Name\tSemi-Major axis\tSemi-Minor axis\tSemi-major orientation\tSemi-minor orien
                            Line2D([0], [0], marker='o', color='w', markerfacecolor='#03c2fc', label='Known'),
                            pat.Ellipse(xy=(0, 0), width=0, height=0,
                                        angle=0, facecolor='none', edgecolor='red', label='Error Ellipse (exagerated)')]
-        plt.legend(handles=legend_elements)
+        plt.legend(handles=legend_elements, bbox_to_anchor=(1.1, 1), loc='upper right')
 
     if not suppress_print:
         print('posteriori variance factor: ' + str(sigma0hat)
@@ -229,4 +232,4 @@ Name\tSemi-Major axis\tSemi-Minor axis\tSemi-major orientation\tSemi-minor orien
 
 # run main function
 if __name__ == '__main__':
-    main("coordinates.cnt", "measurements.mes")
+    main()
