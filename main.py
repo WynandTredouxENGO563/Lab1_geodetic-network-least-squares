@@ -169,7 +169,7 @@ Point Name\tx\ty\tdiffx\tdiffy"""
 
     # Calculate error ellipse
     out.write(divider[1:] + """\nError Ellipse\n
-Name\tSemi-Major axis\tSemi-Minor axis\tSemi-major azimuth"""
+Name\tSemi-Major axis\tSemi-Minor axis\ttheta"""
               )
     # for each 2x2 sub-matrix in Cxhat
     for i in range(0, len(Cxhat), 2):
@@ -187,23 +187,23 @@ Name\tSemi-Major axis\tSemi-Minor axis\tSemi-major azimuth"""
         semi_minor = math.sqrt(lmin)
         semi_major = math.sqrt(lmax)
         # calc orientation of semi-major axis
-        azimuth = 0.5 * math.atan2(2*subM[0][1], subM[1][1] - subM[0][0])  # azimuth is the angle clockwise from the y axis to the semi-major axis
+        theta = 0.5 * math.atan2(-2*subM[0][1], subM[1][1] - subM[0][0])  # theta is the angle counter-clockwise from the x axis to the semi-major axis
 
         # write to file
         outstr = '\n{:' + str(max_name_len) + '}'
-        max_num_len = max(numlen([azimuth, lmax, lmin]))  # find maximum length of numbers not including decimals
+        max_num_len = max(numlen([theta, lmax, lmin]))  # find maximum length of numbers not including decimals
         decimals = 8  # number of decimal places to keep
-        # spacing should be max_num_len + decimals + 2 for decimal point and signs + 2 for buffer
-        tmp = '{:' + str(max_num_len + decimals + 4) + '.' + str(decimals) + 'f}'
+        # spacing should be max_num_len + decimals + 2 for decimal point and signs + 3 for buffer
+        tmp = '{:' + str(max_num_len + decimals + 5) + '.' + str(decimals) + 'f}'
         # spacing for E should be decimals + 1 for E + 1 for sign + 2 for exponent + 2 for number and decimal + 4 for buffer
         tmp2 = '{:' + str(decimals + 10) + '.' + str(decimals) + 'E}'
         outstr = outstr + tmp2*2 + tmp*1
-        outstr = outstr.format(unknown_points[int(i/2)].name, semi_major, semi_minor, azimuth)
+        outstr = outstr.format(unknown_points[int(i/2)].name, semi_major, semi_minor, theta)
         out.write(outstr)
 
         # draw error ellipses on figure f1
         if plot:
-            drawEE(main_ax, unknown_points[int(i/2)].x, unknown_points[int(i/2)].y, semi_major, semi_minor, azimuth, scale=10000, name=unknown_points[int(i/2)].name)
+            drawEE(main_ax, unknown_points[int(i/2)].x, unknown_points[int(i/2)].y, semi_major, semi_minor, theta, scale=10000, name=unknown_points[int(i/2)].name)
     # add legend to f1
     if plot:
         plt.figure(main_ax.figure.number)  # make main_ax the active window

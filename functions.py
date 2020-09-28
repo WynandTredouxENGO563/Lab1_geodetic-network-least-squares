@@ -324,23 +324,23 @@ def plotCNT(CNT, x):
 # x and y: (x,y) center of the ellipse
 # semi_major: size of the semi-major axis
 # semi_minor: size of the semi-minor axis
-# azimuth: orientation of the semi-major axis in radians
+# theta: orientation of the semi-major axis in radians (angle counter-clockwise from the x axis to the semi-major axis)
 # scale (optional): scale for the semi_major and semi_minor values to make the ellipse larger or smaller
 # name (optional): set name for unknown point (used for zoomed in plot)
-def drawEE(ax, x, y, semi_major, semi_minor, azimuth, scale=1, name=''):
-    # convert azimuth to degrees
-    azimuthd = azimuth*180/math.pi
+def drawEE(ax, x, y, semi_major, semi_minor, theta, scale=1, name=''):
+    # convert theta to degrees
+    thetad = theta*180/math.pi
     # create exaggerated ellipse on main plot:
         # ellipse is centered on the given (x,y)
-        # width is the 2*semi-minor axis
-        # height in 2*semi-major
+        # width is the 2*semi-major axis
+        # height in 2*semi-minor
         # angle takes degrees and rotates the ellipse counter-clockwise
-        # azimuth is the clockwise angle from the y axis, so we pass -azimuth in degrees
-    e = pat.Ellipse(xy=(x, y), width=2*semi_minor*scale, height=2*semi_major*scale,
-                    angle=-azimuthd, facecolor='none', edgecolor='red', label='Error Ellipse (exaggerated)')
+        # theta is the counter-clockwise angle from the x axis, so we pass theta in degrees
+    e = pat.Ellipse(xy=(x, y), width=2*semi_major*scale, height=2*semi_minor*scale,
+                    angle=thetad, facecolor='none', edgecolor='red', label='Error Ellipse (exaggerated)')
     ax.add_artist(e)
     # create semi-major axis line
-    l = Line2D([x, x + scale*semi_major*math.sin(azimuth)], [y, y + scale*semi_major*math.cos(azimuth)], color='red')
+    l = Line2D([x, x + scale*semi_major*math.cos(theta)], [y, y + scale*semi_major*math.sin(theta)], color='red')
     ax.add_artist(l)
 
     # create zoomed in plot of unknown point with error ellipse to scale
@@ -349,11 +349,11 @@ def drawEE(ax, x, y, semi_major, semi_minor, azimuth, scale=1, name=''):
     ax2.axis('square')
     plt.scatter(x, y)
     fig.suptitle("To-scale Error Ellipse for " + name + " (square plot)")
-    e = pat.Ellipse(xy=(x, y), width=2*semi_minor, height=2*semi_major,
-                    angle=-azimuthd, facecolor='none', edgecolor='red')
+    e = pat.Ellipse(xy=(x, y), width=2*semi_major, height=2*semi_minor,
+                    angle=thetad, facecolor='none', edgecolor='red')
     ax2.add_artist(e)
     # create semi-major axis line
-    l = Line2D([x, x + semi_major * math.sin(azimuth)], [y, y + semi_major * math.cos(azimuth)], color='red')
+    l = Line2D([x, x + semi_major*math.cos(theta)], [y, y + semi_major*math.sin(theta)], color='red')
     ax2.add_artist(l)
     # adjust limits to 2.2x the semi-major axis
     plt.xlim(x-semi_major*1.1, x+semi_major*1.1)
