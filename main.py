@@ -7,9 +7,11 @@ from datetime import datetime
 # MESFile: Filename of measurements file
 # CNTheader: number of header lines in coordinates file (default is 1)
 # MESheader: number of header lines in measurements file (default is 1)
-# suppress_print (optional): Set to True to suppress outputs to the console
-# plot(optional): Set to False to suppress plotting
-def main(CNTFile = '', MESFile = '', CNTheader=1, Mesheader=1, suppress_print=False, plot=True):
+# suppress_print: Set to True to suppress outputs to the console
+# plot: Set to False to suppress plotting
+# sigma0: a-priori variance factor. Chosen as 1 by default
+# maxit: maximum iterations before breaking the loop
+def main(CNTFile = '', MESFile = '', CNTheader=1, Mesheader=1, suppress_print=False, plot=True, sigma0=1, maxit = 100):
     # start timer
     time0 = datetime.now()
     # if no CNT filename was provided
@@ -28,8 +30,6 @@ def main(CNTFile = '', MESFile = '', CNTheader=1, Mesheader=1, suppress_print=Fa
     # build unknowns vector x
     # x consists of (X,Y) of each unknown point
     x = buildx(CNT)
-    # choose a-priori variance factor
-    sigma0 = 1
     # build weight matrix P
     P = buildP(MES, sigma0)
 
@@ -38,7 +38,6 @@ def main(CNTFile = '', MESFile = '', CNTheader=1, Mesheader=1, suppress_print=Fa
     deltasum = 100  # initialize deltasum to some large value
     # threshold for minimum deltasum should be 1/2 of the smallest measurement standard deviation
     threshold = 0.5*min([i[4] for i in MES])
-    maxit = 100  # maximum iterations before breaking the loop
     count = 1  # initialize iteration counter
     # loop until the absolute sum of the elements in delta is less than some small threshold
     while deltasum > threshold:
