@@ -11,7 +11,7 @@ from datetime import datetime
 # plot: Set to False to suppress plotting
 # sigma0: a-priori variance factor. Chosen as 1 by default
 # maxit: maximum iterations before breaking the loop
-def main(CNTFile = '', MESFile = '', CNTheader=1, Mesheader=1, suppress_print=False, plot=True, sigma0=1, maxit = 100):
+def main(CNTFile='', MESFile='', CNTheader=1, Mesheader=1, suppress_print=False, plot=True, sigma0=1, maxit=100):
     # start timer
     time0 = datetime.now()
     # if no CNT filename was provided
