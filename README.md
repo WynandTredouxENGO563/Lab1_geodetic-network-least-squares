@@ -42,7 +42,7 @@ Format: `ID	Info	Type	Value	Std`
 ## Output Files
 ### output.out
 This files gives all relevant info about the adjustment
-It consists of 9 sections
+It consists of 10 sections
 * **Section 1** - Unnamed
 	* Execution date and time
 	* number of iterations
@@ -70,6 +70,9 @@ It consists of 9 sections
 * **Section 9** - Error Ellipse
 	* Semi-major and semi-minor axis lengths in meters
 	* semi-major axis azimuth in radians (clockwise angle from N/y-axis to the semi-major axis)
+* **Section 10** - Observations test
+	* Says if all the observations passed or not
+	* If any observations failed, it will list exactly which ones failed
 ### Figures.pdf
 Contains a figure of the corrected geodetic network (this figure also contains exaggerated error ellipses. These are not to scale because otherwise you wouldn't be able to see them) and a figure of each error ellipse to scale.
 
