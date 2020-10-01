@@ -212,6 +212,12 @@ Name\tSemi-Major axis\tSemi-Minor axis\ttheta"""
                                        angle=0, facecolor='none', edgecolor='red', label='Error Ellipse (exagerated)')]
         plt.legend(handles=legend_elements, bbox_to_anchor=(1.1, 1), loc='upper right')
 
+    # Check if the residuals pass the statistical test
+    testresults = sTest(rhat, Crhat)
+    # add results to text file
+    out.write(divider + "\nObservations test\n\n")
+    writeResults(testresults, MES, out)
+
     if not suppress_print:
         print('posteriori variance factor: ' + str(sigma0hat)
               + '\nunit variance factor: ' + str(unitvar)

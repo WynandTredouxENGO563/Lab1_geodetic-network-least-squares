@@ -393,3 +393,52 @@ main(CNTFile='filename.cnt', MESFile='filename.mes')""")
 main(CNTFile='my/path/filename.cnt', MESFile='my/path/filename.mes')""")
 
     return found[0]  # return 1st string in found
+
+
+#Function to test is the results are acceptable:
+# rhat: residuals vector
+# Crhat: variance covariance matrix for the residuals
+# return results as a boolean list (true/false for each observation)
+def sTest(rhat, Crhat):
+    n = len(rhat)
+    # check shape of Crhat
+    if Crhat.shape[0] != n or Crhat.shape[1] != n:
+        raise Exception("rhat must be nx1, and Crhat must be nxn")
+    results = []
+    # do test on each observation residual
+    for i in range(0, n):
+        if rhat[i] > 3*math.sqrt(Crhat[i][i]):
+            results.append(False)
+        else:
+            results.append(True)
+    if len(results) != n:
+        raise Exception("results is the wrong size")
+    # return results as a boolean list
+    return results
+
+
+# Function to write results from STest to file
+# results: boolean list
+# MES: measurements array (used to get measurement IDs)
+# file: file object to output to
+# returns nothing
+def writeResults(results, MES, file):
+    alltrue = True
+    count = 0
+    # loop through results
+    for i in results:
+        # if an observation failed
+        if i == False:
+            # change flag
+            alltrue = False
+            # get ID from MES
+            ID = MES[count][0]
+            # output error to file
+            file.write("Measurement ID " + str(ID) + " failed\n")
+        count = count + 1
+    # if all observations passed
+    if alltrue:
+        # just write 1 line that tells the user all observations passed
+        file.write("All observations passed!")
+    return
+
